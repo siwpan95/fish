@@ -53,7 +53,7 @@ class SaveManager:
             self._log.warning("存档目录不可创建(%s)：%s" % (self.directory, e))
         # 复用引擎的槽位命名 / 信封格式，只接管落盘那一步
         self._mgr = SaveLoadManager(self.directory, version=SCHEMA_VERSION,
-                                    encrypt=False, logger=self._log)
+                                    logger=self._log)
         self.last_error = ""
 
     # ── 路径 ──
