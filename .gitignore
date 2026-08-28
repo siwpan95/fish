@@ -1,4 +1,4 @@
-__pycache__/
+﻿__pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
@@ -29,3 +29,6 @@ dist/
 # 🔴 Q9 合规：仓库内不得包含 G:\soft 的 XJ380 SDK 任何文件（EULA 专有，无 LICENSE）
 xj380/sdk/
 xj380/**/XJ380_*
+
+# 未跟踪产物/输出治理（2026-08-28）
+*.spec
