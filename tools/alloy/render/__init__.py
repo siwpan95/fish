@@ -19,8 +19,8 @@ from alloy.render.console_renderer import ConsoleRenderer
 # Tkinter GUI 组件（可选，无 tkinter 时设为 None）
 try:
     from alloy.render.gui_base import BaseWindow, StatusPanel, Styles
-except ImportError:
-    logger.warning("tkinter 不可用，Tkinter GUI 功能已禁用（BaseWindow/StatusPanel/Styles = None）")
+except ImportError as _e:
+    logger.warning("tkinter 不可用，Tkinter GUI 功能已禁用（BaseWindow/StatusPanel/Styles = None）：%s", _e)
     BaseWindow = None
     StatusPanel = None
     Styles = None
@@ -46,8 +46,8 @@ try:
         GameLogPanel, StatusBar, QuickCommandBar, GameInputBar,
         GameWindow, GameTheme,
     )
-except ImportError:
-    logger.warning("tkinter 不可用，Game UI 组件已禁用")
+except ImportError as _e2:
+    logger.warning("tkinter 不可用，Game UI 组件已禁用：%s", _e2)
     GameLogPanel = None
     StatusBar = None
     QuickCommandBar = None
