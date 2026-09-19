@@ -9,7 +9,7 @@ import os
 import sys
 import tempfile
 
-# —— 必须先于任何 fishtank / alloy import ——
+# —— 必须先于任何 fishtank / allin_engine import ——
 _TEST_HOME = os.path.join(tempfile.gettempdir(), "lazyfishtank_pytest")
 os.makedirs(_TEST_HOME, exist_ok=True)
 os.environ.setdefault("ALLIN_USER_DATA", _TEST_HOME)

@@ -1,6 +1,6 @@
 """ECS 系统包。
 
-优先级即执行顺序（`alloy.core.ecs.World` 按 `priority` 升序调度）::
+优先级即执行顺序（`allin_engine.core.ecs.World` 按 `priority` 升序调度）::
 
     10  TickSystem          感知：钳 dt、推固定步、鱼食下沉、给每条鱼的黑板喂数据
     20  BrainSystem         （引擎自带）驱动每条鱼的行为树

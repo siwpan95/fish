@@ -4,7 +4,7 @@
 | --- | --- |
 | 文档语言 | 简体中文 |
 | 项目名称 | `lazy_fish_tank` |
-| 编程语言 | **P0 端**：Python 3.10+（复用 `G:\tools\alloy`，GUI 用 tkinter，零硬依赖）<br>**P1 端**：C++11（XJ380OS XACT 2026v4，`xguiapi.h`，产物 ELF/EPF） |
+| 编程语言 | **P0 端**：Python 3.10+（复用 `G:\tools\allin_engine`，GUI 用 tkinter，零硬依赖）<br>**P1 端**：C++11（XJ380OS XACT 2026v4，`xguiapi.h`，产物 ELF/EPF） |
 | 产出目录 | `G:\fish` |
 | 撰写人 | 许清楚（产品经理） |
 | 版本 | v1.0 |
@@ -12,12 +12,12 @@
 
 ## 0. 原始需求复述
 
-> 「帮我开发一个懒人桌面养鱼模拟器游戏（联网搜索完成信息调研；`G:\soft`、`G:\tools\alloy` 结合这两个项目），成果输出到 `G:\fish`」
+> 「帮我开发一个懒人桌面养鱼模拟器游戏（联网搜索完成信息调研；`G:\soft`、`G:\tools\allin_engine` 结合这两个项目），成果输出到 `G:\fish`」
 
 拆解为三条可执行约束：
 
 1. **品类**：懒人 + 桌面 + 养鱼模拟器 —— 桌宠形态的放置类养成游戏，而非需要天天肝的重度经营。
-2. **资产复用**：必须真正复用 `alloy`（Python 游戏内核）与 `G:\soft`（XJ380OS C++ SDK），双端交付。
+2. **资产复用**：必须真正复用 `allin_engine`（Python 游戏内核）与 `G:\soft`（XJ380OS C++ SDK），双端交付。
 3. **调研先行**：品类机制、桌宠交互范式、目标平台可行性均需有据可查。
 
 ---
@@ -45,7 +45,7 @@
 | S15 | **OpenXJ380 官方开源仓库**（2026-08 首次公开） | https://github.com/xingji-studio/OpenXJ380 | GUI 可行性边界、文档缺口的补救途径 |
 | S16 | XINGJI Studios GitHub 组织 | http://github.org/xingji-studio | BridgeEngine / StardustUI 状态 |
 
-> 本地一手资料（非网络）：`G:\soft\XJ380_XACT_2026v4_windows\depend\include\xguiapi.h`（v1.2.0，304 行，已逐行核对）、`G:\soft\XJ380_SDK_项目评估报告.md`、`G:\tools\alloy` 源码。
+> 本地一手资料（非网络）：`G:\soft\XJ380_XACT_2026v4_windows\depend\include\xguiapi.h`（v1.2.0，304 行，已逐行核对）、`G:\soft\XJ380_SDK_项目评估报告.md`、`G:\tools\allin_engine` 源码。
 
 ### 1.2 关键发现
 
@@ -531,9 +531,9 @@ quadrantChart
 
 ## 8. 引擎能力映射总表（"结合两个项目"的落地清单）
 
-> 以下映射均已对照 `G:\tools\alloy` 实际源码核实（类名与方法名为实际存在的符号）。
+> 以下映射均已对照 `G:\tools\allin_engine` 实际源码核实（类名与方法名为实际存在的符号）。
 
-| 玩法能力 | 映射到 alloy | 已核实的可用符号 |
+| 玩法能力 | 映射到 allin_engine | 已核实的可用符号 |
 | --- | --- | --- |
 | 鱼缸世界 / 实体管理 | `core/ecs.py` | `World.create_entity / add_entity / add_system / get_system`，`Entity.add/get/has/remove`，`Component`，`System.update(world, dt)` |
 | 鱼的自主游动与觅食 | `ai/decision/behavior_tree.py` + `ai/decision/brain.py` | `Status`、`Blackboard.get/set/update/snapshot`、`Node.tick/attach`、`Sequence`、`Selector`、`Parallel`、`Inverter`、`Succeeder`；`BrainComponent` / `BlackboardComponent` / `BrainSystem` |
@@ -599,7 +599,7 @@ quadrantChart
 7. 空闲态 CPU 占用 < 2%（单核），内存 < 120 MB；窗口隐藏时渲染挂起。
 8. 整个游玩过程中**没有出现过任何一次桌面通知、红点、强制弹窗或音效**。
 9. 玩法逻辑中**没有任何硬编码数值**，全部来自 `data/balance.json` 与 `data/fish_data.json`。
-10. `alloy` 源码**未被修改**（只被 import 与继承扩展）。
+10. `allin_engine` 源码**未被修改**（只被 import 与继承扩展）。
 
 ---
 

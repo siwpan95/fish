@@ -10,7 +10,7 @@
 | 任务总数 | **5 个**（按模块/层次分组，非按文件拆分） |
 
 > **给工程师的话**：请先完整读一遍 `ARCHITECTURE.md`，特别是 **§0 技术侦察结论** 与 **§11 共享知识**。
-> 那里列了 17 条 alloy 的真实行为与 12 条 XJ380 SDK 的真实约束，其中至少 8 条与 PRD 的假设不符。
+> 那里列了 17 条 allin_engine 的真实行为与 12 条 XJ380 SDK 的真实约束，其中至少 8 条与 PRD 的假设不符。
 > **不读那两节直接开工，一定会踩坑。**
 
 ---
@@ -68,7 +68,7 @@ pytest.ini
 README.md                          运行说明 + SDK 需自行获取（Q9）
 .gitignore
 fishtank/__init__.py
-fishtank/engine_bootstrap.py     ★ alloy 唯一接入点
+fishtank/engine_bootstrap.py     ★ allin_engine 唯一接入点
 fishtank/constants.py              非数值常量（键名、枚举字符串）
 fishtank/events.py                 fishtank.* 事件名
 data/balance.json                ★ 全部平衡参数（照 ARCHITECTURE §9.1 逐字段落地）
@@ -80,14 +80,14 @@ tools/gen_fish_data.py             从 FISH_CONTENT.md 提取生成 fish_data.js
 
 #### 子任务清单
 
-- [ ] **1.1** `engine_bootstrap.py` 严格照 ARCHITECTURE §3.1 实现。**验证点**：`python -c "import fishtank.engine_bootstrap as b; from alloy.core.paths import get_save_dir; print(get_save_dir())"` 必须打印 `...\LazyFishTank\saves`，而**不是** `...\alloy\saves`。若打印后者，说明环境变量设晚了。
-- [ ] **1.2** 三条引擎根定位策略（`ALLIN_ENGINE_HOME` → `G:\tools\alloy` → 相邻目录），找不到时抛清晰错误。
+- [ ] **1.1** `engine_bootstrap.py` 严格照 ARCHITECTURE §3.1 实现。**验证点**：`python -c "import fishtank.engine_bootstrap as b; from allin_engine.core.paths import get_save_dir; print(get_save_dir())"` 必须打印 `...\LazyFishTank\saves`，而**不是** `...\allin_engine\saves`。若打印后者，说明环境变量设晚了。
+- [ ] **1.2** 三条引擎根定位策略（`ALLIN_ENGINE_HOME` → `G:\tools\allin_engine` → 相邻目录），找不到时抛清晰错误。
 - [ ] **1.3** 统一再导出全部引擎符号；`gui_symbols()` 延迟导入（E9：`Styles` 必须在 `tk.Tk()` 之后）。
 - [ ] **1.4** `main.py`：CLI 参数 `--no-tray` / `--safe`（禁用可选依赖）/ `--data-dir`（便携模式）。
 - [ ] **1.5** `data/balance.json` 按 §9.1 **逐字段**写全（含 `offline.segments`、`growth.thresholds`、`water.filter_gain` 等）。
 - [ ] **1.6** `tools/gen_fish_data.py` 解析 FISH_CONTENT.md §2 的 24 个条目 → `fish_data.json`。**注意 `id` 必须与文档逐字一致**。
 - [ ] **1.7** `decor_data.json` 12 件（用 FISH_CONTENT §4 的价格 80–900，见 Δ4）；`ui_text.json` 全量文案。
-- [ ] **1.8** `README.md` 写明：需 Python ≥3.10、`alloy` 路径、**SDK 需用户自行获取（仓库不含 `G:\soft` 任何文件）**。
+- [ ] **1.8** `README.md` 写明：需 Python ≥3.10、`allin_engine` 路径、**SDK 需用户自行获取（仓库不含 `G:\soft` 任何文件）**。
 - [ ] **1.9** 中文字体（P0-21）：优先引擎 `utils/font.py` 的自带 TTF，回退 `Microsoft YaHei`，再回退 `TkDefaultFont`。
 
 #### Done 定义
@@ -355,7 +355,7 @@ graph TD
 
 | # | 风险 | 概率 | 影响 | 缓解措施 | 负责任务 |
 | --- | --- | --- | --- | --- | --- |
-| R1 | **`engine_bootstrap` 导入顺序写错** → 存档写到 `%APPDATA%\alloy\` | 高 | 中 | T01 子任务 1.1 的验证命令必须执行并贴出输出 | T01 |
+| R1 | **`engine_bootstrap` 导入顺序写错** → 存档写到 `%APPDATA%\allin_engine\` | 高 | 中 | T01 子任务 1.1 的验证命令必须执行并贴出输出 | T01 |
 | R2 | **双端离线结算结果不一致** | 高 | **致命**（P1-13 是核心卖点） | 整数厘 + `floor(x+0.5)` + uid 升序 + 黄金用例；对偶文件成对提交 | T02 / T05 |
 | R3 | **E6 dataclass 退化** 导致存档静默损坏 | 中 | **高**（无异常，很难发现） | 全项目禁 `from __future__ import annotations` + T02 子任务 2.8 专项回归断言 | T02 |
 | R4 | **行为树共享实例** 导致所有鱼动作同步 | 中 | 中 | `make_fish_brain` 每鱼调一次；code review 重点检查 | T03 |
@@ -381,7 +381,7 @@ graph TD
 - [ ] 理解为什么**金币要用整数厘**、**取整要用 `floor(x+0.5)`**（双端一致性）
 - [ ] 知道 `pystray` **当前没装**，降级路径是默认路径
 - [ ] 知道 XJ380 端**当前编译不了**，这不是 bug
-- [ ] 知道 `alloy` 与 `G:\soft` **一个字节都不能改**
+- [ ] 知道 `allin_engine` 与 `G:\soft` **一个字节都不能改**
 
 ---
 

@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('data', 'data'), ('tools\\alloy', 'tools\\alloy')]
+datas = [('data', 'data'), ('tools\\allin_engine', 'tools\\allin_engine')]
 binaries = []
-hiddenimports = ['tkinter', 'tkinter.ttk', 'tkinter.font', 'PIL', 'PIL._tkinter_finder', 'pystray', 'pystray._win32', 'numpy', 'scipy', 'asteval', 'alloy', 'alloy.core', 'alloy.core.ecs', 'alloy.core.game_loop', 'alloy.core.event_bus', 'alloy.core.data_library', 'alloy.core.serializable', 'alloy.core.deps', 'alloy.core.paths', 'alloy.systems', 'alloy.systems.save_load', 'alloy.ai', 'alloy.ai.decision', 'alloy.ai.decision.behavior_tree', 'alloy.ai.decision.brain', 'alloy.ai.decision.difference_engine', 'alloy.fx', 'alloy.fx.particle', 'alloy.render', 'alloy.utils', 'alloy.utils.json_loader', 'alloy.utils.logger']
+hiddenimports = ['tkinter', 'tkinter.ttk', 'tkinter.font', 'PIL', 'PIL._tkinter_finder', 'pystray', 'pystray._win32', 'numpy', 'scipy', 'asteval', 'allin_engine', 'allin_engine.core', 'allin_engine.core.ecs', 'allin_engine.core.game_loop', 'allin_engine.core.event_bus', 'allin_engine.core.data_library', 'allin_engine.core.serializable', 'allin_engine.core.deps', 'allin_engine.core.paths', 'allin_engine.systems', 'allin_engine.systems.save_load', 'allin_engine.ai', 'allin_engine.ai.decision', 'allin_engine.ai.decision.behavior_tree', 'allin_engine.ai.decision.brain', 'allin_engine.ai.decision.difference_engine', 'allin_engine.fx', 'allin_engine.fx.particle', 'allin_engine.render', 'allin_engine.utils', 'allin_engine.utils.json_loader', 'allin_engine.utils.logger']
 tmp_ret = collect_all('tkinter')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('PIL')

@@ -1,11 +1,11 @@
-"""alloy 唯一接入点。任何其他模块都不得直接 import alloy。
+"""allin_engine 唯一接入点。任何其他模块都不得直接 import allin_engine。
 
 🔴 本文件禁止 `from __future__ import annotations`（E6：会破坏引擎 Serializable 的嵌套反序列化）。
 
 三条硬约束（见 ARCHITECTURE §3.1）：
-1. `ALLIN_USER_DATA` 必须在 `import alloy` **之前**设置（E3：paths.py 在模块导入期求值）。
-2. `alloy` 不是 pip 包，优先使用项目内置的 `<root>/tools/alloy`，实现零外部依赖。
-3. 全项目只有本文件 `import alloy.*`，其余模块一律从这里取符号。
+1. `ALLIN_USER_DATA` 必须在 `import allin_engine` **之前**设置（E3：paths.py 在模块导入期求值）。
+2. `allin_engine` 不是 pip 包，优先使用项目内置的 `<root>/tools/allin_engine`，实现零外部依赖。
+3. 全项目只有本文件 `import allin_engine.*`，其余模块一律从这里取符号。
 """
 
 import os
@@ -27,21 +27,21 @@ def _engine_candidates():
     """引擎根目录多级定位候选表（顺序即优先级）。
 
     ① 环境变量 ALLIN_ENGINE_HOME（显式覆盖）
-    ② 项目内置 <项目根>/tools/alloy（零外部依赖，复制后即用）
+    ② 项目内置 <项目根>/tools/allin_engine（零外部依赖，复制后即用）
     ③ PyInstaller 冻结环境 sys._MEIPASS 下的内置引擎
-    ④ 本机默认 G:\\tools\\alloy（兼容旧开发环境）
+    ④ 本机默认 G:\\tools\\allin_engine（兼容旧开发环境）
     """
     here = Path(__file__).resolve()
     # parents[0]=fishtank/, parents[1]=项目根/, parents[2]=项目父目录/
     candidates = [
         os.environ.get("ALLIN_ENGINE_HOME", ""),
-        str(here.parents[1] / "tools" / "alloy"),
+        str(here.parents[1] / "tools" / "allin_engine"),
     ]
     # PyInstaller frozen: sys._MEIPASS 才是真实文件所在位置
     meipass = getattr(sys, "_MEIPASS", "")
     if meipass:
-        candidates.append(str(Path(meipass) / "tools" / "alloy"))
-    candidates.append(r"G:\tools\alloy")
+        candidates.append(str(Path(meipass) / "tools" / "allin_engine"))
+    candidates.append(r"G:\tools\allin_engine")
     return candidates
 
 
@@ -74,7 +74,7 @@ def bootstrap(user_data_dir=""):
         pass
     _user_data_dir = user_data_dir
 
-    # —— 步骤 2：再挂 sys.path（插入引擎的父目录，因为包名是 alloy）——
+    # —— 步骤 2：再挂 sys.path（插入引擎的父目录，因为包名是 allin_engine）——
     found = ""
     for cand in _engine_candidates():
         if cand and Path(cand, *_ENGINE_PROBE).is_file():
@@ -83,9 +83,9 @@ def bootstrap(user_data_dir=""):
     if not found:
         tried = "\n  ".join(c for c in _engine_candidates() if c)
         raise RuntimeError(
-            "未找到 alloy 引擎目录。已尝试以下路径：\n  "
+            "未找到 allin_engine 引擎目录。已尝试以下路径：\n  "
             + tried
-            + "\n请设置环境变量 ALLIN_ENGINE_HOME 指向 alloy 目录"
+            + "\n请设置环境变量 ALLIN_ENGINE_HOME 指向 allin_engine 目录"
             "（该目录下应存在 core/ecs.py）。"
         )
     parent = str(Path(found).parent)
@@ -99,23 +99,23 @@ bootstrap()  # 模块被 import 时立即执行，保证顺序正确
 
 
 # —— 步骤 3：统一再导出（换引擎版本只改这里）——
-from alloy.core.ecs import World, Entity, Component, System            # noqa: E402
-from alloy.core.game_loop import FixedTimestepLoop                     # noqa: E402
-from alloy.core.event_bus import EventBus                              # noqa: E402
-from alloy.core.data_library import DataLibrary                        # noqa: E402
-from alloy.core.serializable import Serializable                       # noqa: E402
-from alloy.core import deps                                            # noqa: E402
-from alloy.core import paths as engine_paths                           # noqa: E402
-from alloy.systems.save_load import SaveLoadManager                    # noqa: E402
-from alloy.ai.decision.behavior_tree import (                          # noqa: E402
+from allin_engine.core.ecs import World, Entity, Component, System            # noqa: E402
+from allin_engine.core.game_loop import FixedTimestepLoop                     # noqa: E402
+from allin_engine.core.event_bus import EventBus                              # noqa: E402
+from allin_engine.core.data_library import DataLibrary                        # noqa: E402
+from allin_engine.core.serializable import Serializable                       # noqa: E402
+from allin_engine.core import deps                                            # noqa: E402
+from allin_engine.core import paths as engine_paths                           # noqa: E402
+from allin_engine.systems.save_load import SaveLoadManager                    # noqa: E402
+from allin_engine.ai.decision.behavior_tree import (                          # noqa: E402
     Status, Blackboard, Node, Selector, Sequence, Condition, Action, BehaviorTree)
-from alloy.ai.decision.brain import (                                  # noqa: E402
+from allin_engine.ai.decision.brain import (                                  # noqa: E402
     BlackboardComponent, BrainComponent, BrainSystem)
-from alloy.ai.decision.difference_engine import ReactiveTracker         # noqa: E402
-from alloy.fx.particle import (                                        # noqa: E402
+from allin_engine.ai.decision.difference_engine import ReactiveTracker         # noqa: E402
+from allin_engine.fx.particle import (                                        # noqa: E402
     Particle, ForceField, Emitter, ParticleSystem)
-from alloy.utils.json_loader import JSONLoader                         # noqa: E402
-from alloy.utils.logger import Logger                                  # noqa: E402
+from allin_engine.utils.json_loader import JSONLoader                         # noqa: E402
+from allin_engine.utils.logger import Logger                                  # noqa: E402
 
 _LOGGERS = {}
 
@@ -123,7 +123,7 @@ _LOGGERS = {}
 def get_logger(name="fishtank", level="INFO", console=True):
     """返回一个按名字缓存的引擎 Logger。
 
-    ⚠️ 实读结论：`alloy.utils.logger` **没有** `get_logger` 工厂
+    ⚠️ 实读结论：`allin_engine.utils.logger` **没有** `get_logger` 工厂
     （ARCHITECTURE §3.1 的示例代码在这一行有误），只有 `Logger` 类。
     这里补一个等价工厂，日志落到 <user_data>/logs/<name>.log。
 
@@ -167,8 +167,8 @@ def gui_symbols():
 
     :returns: (Styles, StatusPanel, TkUtil, hsv_to_rgb)
     """
-    from alloy.render.gui_base import Styles, StatusPanel, TkUtil
-    from alloy.render.color_system import hsv_to_rgb
+    from allin_engine.render.gui_base import Styles, StatusPanel, TkUtil
+    from allin_engine.render.color_system import hsv_to_rgb
     return Styles, StatusPanel, TkUtil, hsv_to_rgb
 
 

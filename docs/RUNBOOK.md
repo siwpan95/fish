@@ -204,18 +204,18 @@ python main.py
 **症状**：
 
 ```
-RuntimeError: 未找到 alloy，请设置环境变量 ALLIN_ENGINE_HOME
+RuntimeError: 未找到 allin_engine，请设置环境变量 ALLIN_ENGINE_HOME
 ```
 
-或程序启动时报找不到 `alloy` 相关模块。
+或程序启动时报找不到 `allin_engine` 相关模块。
 
 **原因排查**：程序按三级策略定位引擎——
 
 | 优先级 | 位置 | 如何检查 |
 |--------|------|----------|
 | 1 | 环境变量 `ALLIN_ENGINE_HOME` | `echo %ALLIN_ENGINE_HOME%` |
-| 2 | 本机默认 `G:\tools\alloy` | `dir G:\tools\alloy\core\ecs.py` |
-| 3 | 相邻部署 `<项目父目录>\tools\alloy` | `dir G:\tools\alloy\core\ecs.py` |
+| 2 | 本机默认 `G:\tools\allin_engine` | `dir G:\tools\allin_engine\core\ecs.py` |
+| 3 | 相邻部署 `<项目父目录>\tools\allin_engine` | `dir G:\tools\allin_engine\core\ecs.py` |
 
 判定标准是目录下存在 `core/ecs.py`。
 
@@ -223,7 +223,7 @@ RuntimeError: 未找到 alloy，请设置环境变量 ALLIN_ENGINE_HOME
 
 ```powershell
 # 如果引擎在其他位置，设置环境变量指向它
-setx ALLIN_ENGINE_HOME "D:\your\path\to\alloy"
+setx ALLIN_ENGINE_HOME "D:\your\path\to\allin_engine"
 
 # 验证设置生效（需要重新打开命令行窗口）
 echo %ALLIN_ENGINE_HOME%
@@ -296,7 +296,7 @@ python main.py --safe
 
 ```
 [1/4] 引擎就绪
-      engine_home = G:\tools\alloy
+      engine_home = G:\tools\allin_engine
       user_data   = C:\Users\13122\AppData\Roaming\LazyFishTank
       save_dir    = C:\Users\13122\AppData\Roaming\LazyFishTank\saves
       deps        = {'numpy': True, 'scipy': True, 'asteval': True, 'PIL': True, 'pystray': False, 'tkinter': True}
@@ -370,7 +370,7 @@ g++ -std=c++11 -I xj380/src -I xj380/src/core \
 python tools/engine_hash.py --check
 ```
 
-> 该命令对比 `alloy` 目录的 SHA256 哈希基线。若哈希不匹配，说明引擎文件被意外修改（违反只读铁律）。
+> 该命令对比 `allin_engine` 目录的 SHA256 哈希基线。若哈希不匹配，说明引擎文件被意外修改（违反只读铁律）。
 
 ---
 
@@ -402,10 +402,10 @@ echo %ALLIN_USER_DATA%
 
 ### 5.2 自定义引擎位置
 
-如果 `alloy` 不在默认的 `G:\tools\alloy`：
+如果 `allin_engine` 不在默认的 `G:\tools\allin_engine`：
 
 ```powershell
-setx ALLIN_ENGINE_HOME "D:\path\to\alloy"
+setx ALLIN_ENGINE_HOME "D:\path\to\allin_engine"
 ```
 
 ### 5.3 便携部署

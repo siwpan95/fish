@@ -20,13 +20,13 @@
 
 我在设计之前**实读**了两个资产的源码/头文件，并在本机做了可执行验证。以下结论直接推翻了 PRD 中若干映射假设，是本架构与 PRD 差异的根因。
 
-### 0.1 alloy（`G:\tools\alloy`）实读结论
+### 0.1 allin_engine（`G:\tools\allin_engine`）实读结论
 
 | # | 结论 | 证据 | 对架构的影响 |
 | --- | --- | --- | --- |
 | E1 | `World / Entity / System / Component` API 与 PRD 描述**一致，可直接用** | `core/ecs.py`（462 行）：`World.create_entity/add_entity/add_system/get_system/remove_system/update(dt)/each(*types)`；`Entity.add/get/has/remove` 且用 `__slots__`；`System.update(world, dt)` + 类属性 `priority` + `enabled(world)` | ✅ P0-01 按 PRD 落地 |
 | E2 | `FixedTimestepLoop.run_real_time()` 是**阻塞式**死循环 | `core/game_loop.py`：内部 `while True` + `time.monotonic()` | ❌ 不能与 tkinter `mainloop()` 共存。**必须改用 `root.after(33, tick)` 手动驱动 `loop.advance(real_dt)`** |
-| E3 | `paths.get_save_dir()` 硬编码 `%APPDATA%/alloy/saves`，**但可被环境变量 `ALLIN_USER_DATA` 覆盖** | `core/paths.py`；覆盖值在**模块导入期求值** | ✅ Q7 有解。**必须在 `import alloy` 之前**设置环境变量，见 §3.1 |
+| E3 | `paths.get_save_dir()` 硬编码 `%APPDATA%/allin_engine/saves`，**但可被环境变量 `ALLIN_USER_DATA` 覆盖** | `core/paths.py`；覆盖值在**模块导入期求值** | ✅ Q7 有解。**必须在 `import allin_engine` 之前**设置环境变量，见 §3.1 |
 | E4 | `SaveLoadManager.load()` 只返回 `state_data`，**外层信封的 `timestamp` 被丢弃** | `systems/save_load.py`（317 行）：信封为 `{version, timestamp, time_str, state_data}` | ⚠️ **离线结算的时间基准会丢失**。必须把 `saved_at_utc` 冗余写进我们自己的 state 内部，见 §6 |
 | E5 | `world/game_state.py` 的 `GameState/PlayerState` 是**叙事 RPG 专用**（`hp/sanity/corruption/chapter/imagery_network`），**没有 `currency` 字段** | `world/game_state.py`（381 行） | ❌ PRD P0-08「扩展 `GameState.currency`」**不成立**。自建 `FishTankState`，见 §6 |
 | E6 | `core/serializable.py` 的 `Serializable` 依赖 `dataclasses.fields(...).type`。若定义方文件含 `from __future__ import annotations`，`field.type` 退化为**字符串**，嵌套 dataclass 的 `from_dict` 会**静默返回 dict 而不是对象**（无异常的数据损坏） | 本机 Python 3.14.4 实测复现 | 🔴 **硬性规则：项目内所有 dataclass 所在文件禁止写 `from __future__ import annotations`**，见 §11 |
@@ -134,7 +134,7 @@ pystray=False   ← 未安装
 │  L1 内核层    fishtank/economy.py + offline.py  ★纯函数★        │
 │               ←→ 与 xj380/src/core/economy.cpp 一一对应          │
 ├──────────────────────────────────────────────────────────────┤
-│  L0 资产层    alloy（只读引用）   G:\soft SDK（只读引用）  │
+│  L0 资产层    allin_engine（只读引用）   G:\soft SDK（只读引用）  │
 └──────────────────────────────────────────────────────────────┘
                     data/*.json  ← 双端共享的唯一数值源
 ```
@@ -148,10 +148,10 @@ pystray=False   ← 未安装
 
 | 选型 | 理由 |
 | --- | --- |
-| **alloy ECS**（`core/ecs.py`） | 资产复用铁律；且鱼/装饰/气泡天然是实体，`World.each()` 查询正好 |
-| **alloy 行为树**（`ai/decision/`） | P0-02 要求"非机械直线运动"，Selector/Sequence 能表达"觅食 > 趋边转向 > 巡游 > 发呆"优先级 |
-| **alloy 粒子**（`fx/particle.py`） | 气泡浮力用 `ForceField("gravity", strength<0)`，现成 |
-| **alloy SaveLoadManager** | 自带信封 + 自动存档 + 原子写 |
+| **allin_engine ECS**（`core/ecs.py`） | 资产复用铁律；且鱼/装饰/气泡天然是实体，`World.each()` 查询正好 |
+| **allin_engine 行为树**（`ai/decision/`） | P0-02 要求"非机械直线运动"，Selector/Sequence 能表达"觅食 > 趋边转向 > 巡游 > 发呆"优先级 |
+| **allin_engine 粒子**（`fx/particle.py`） | 气泡浮力用 `ForceField("gravity", strength<0)`，现成 |
+| **allin_engine SaveLoadManager** | 自带信封 + 自动存档 + 原子写 |
 | **tkinter**（标准库） | 零硬依赖铁律；且 `-transparentcolor` 是 Windows 桌宠透明的最省事方案（实测可用） |
 | **不用 pygame** | 虽已安装，但它抢焦点、开独立窗口、不支持透明/置顶/穿透，与桌宠形态冲突 |
 | **不用 MUI/React** | 本项目是本地桌面应用，非 Web |
@@ -187,7 +187,7 @@ G:\fish\
 │
 ├── fishtank/                               ── L1+L2 平台无关领域层（严禁 import tkinter）
 │   ├── __init__.py
-│   ├── engine_bootstrap.py                 ★ alloy 唯一接入点（§3.1）
+│   ├── engine_bootstrap.py                 ★ allin_engine 唯一接入点（§3.1）
 │   ├── constants.py                          非数值常量（键名、枚举字符串）
 │   ├── events.py                             自定义事件名常量 fishtank.*
 │   ├── data_defs.py                          FishSpeciesDef / DecorDef / BalanceTable + DataLibrary 子类
@@ -260,41 +260,41 @@ G:\fish\
 │   ├── test_state_roundtrip.py               存档序列化往返 + E6 退化回归测试
 │   ├── test_data_integrity.py                灌库校验（FISH_CONTENT.md §6 清单自动化）
 │   ├── test_no_hardcoded_numbers.py          扫描 fishtank/ 禁止魔法数字（验收第 9 条）
-│   ├── test_engine_untouched.py              校验 alloy 未被修改（验收第 10 条）
+│   ├── test_engine_untouched.py              校验 allin_engine 未被修改（验收第 10 条）
 │   └── golden/
 │       └── offline_cases.json              ★ 双端共用黄金数据（PY 生成，C++ 读同一份）
 │
 └── tools/
     ├── gen_golden.py                         生成/刷新黄金用例
     ├── gen_fish_data.py                      从 FISH_CONTENT.md 提取 → fish_data.json
-    └── engine_hash.py                        计算 alloy 目录哈希（配合 test_engine_untouched）
+    └── engine_hash.py                        计算 allin_engine 目录哈希（配合 test_engine_untouched）
 ```
 
 **文件数统计**：Python 42 个、C++ 34 个（17 对 .cpp/.h）、JSON 5 个、文档 6 个。
 
 ---
 
-## 3. alloy 接入方案
+## 3. allin_engine 接入方案
 
 ### 3.1 `fishtank/engine_bootstrap.py` — 唯一接入点
 
 **这是整个项目最先要写、也最容易写错的文件。** 三条硬约束：
 
-1. `ALLIN_USER_DATA` **必须在 `import alloy` 之前**设置（E3：导入期求值）。
-2. `alloy` 不是 pip 包，在 `G:\tools\alloy`，需把**其父目录** `G:\tools` 加入 `sys.path`。
-3. 全项目**只有这一个文件** `import alloy.*`，其余模块一律 `from fishtank.engine_bootstrap import World, System, ...`。
+1. `ALLIN_USER_DATA` **必须在 `import allin_engine` 之前**设置（E3：导入期求值）。
+2. `allin_engine` 不是 pip 包，在 `G:\tools\allin_engine`，需把**其父目录** `G:\tools` 加入 `sys.path`。
+3. 全项目**只有这一个文件** `import allin_engine.*`，其余模块一律 `from fishtank.engine_bootstrap import World, System, ...`。
 
 ```python
 # fishtank/engine_bootstrap.py   （🔴 禁止 from __future__ import annotations）
-"""alloy 唯一接入点。任何其他模块都不得直接 import alloy。"""
+"""allin_engine 唯一接入点。任何其他模块都不得直接 import allin_engine。"""
 import os, sys
 from pathlib import Path
 
 APP_NAME = "LazyFishTank"
 _ENGINE_CANDIDATES = [
     os.environ.get("ALLIN_ENGINE_HOME"),        # ① 显式覆盖
-    r"G:\tools\alloy",                   # ② 本机默认
-    str(Path(__file__).resolve().parents[2] / "tools" / "alloy"),  # ③ 相邻部署
+    r"G:\tools\allin_engine",                   # ② 本机默认
+    str(Path(__file__).resolve().parents[2] / "tools" / "allin_engine"),  # ③ 相邻部署
 ]
 
 _ready = False
@@ -308,7 +308,7 @@ def bootstrap(user_data_dir: str = "") -> None:
     if not user_data_dir:
         base = os.environ.get("APPDATA") or str(Path.home())
         user_data_dir = str(Path(base) / APP_NAME)
-    os.environ["ALLIN_USER_DATA"] = user_data_dir      # 覆盖引擎默认 %APPDATA%/alloy
+    os.environ["ALLIN_USER_DATA"] = user_data_dir      # 覆盖引擎默认 %APPDATA%/allin_engine
     Path(user_data_dir, "saves").mkdir(parents=True, exist_ok=True)
     # —— 步骤 2：再挂 sys.path ——
     for cand in _ENGINE_CANDIDATES:
@@ -318,34 +318,34 @@ def bootstrap(user_data_dir: str = "") -> None:
                 sys.path.insert(0, parent)
             break
     else:
-        raise RuntimeError("未找到 alloy，请设置环境变量 ALLIN_ENGINE_HOME")
+        raise RuntimeError("未找到 allin_engine，请设置环境变量 ALLIN_ENGINE_HOME")
     _ready = True
 
 bootstrap()   # 模块被 import 时立即执行，保证顺序正确
 
 # —— 步骤 3：统一再导出（换引擎版本只改这里）——
-from alloy.core.ecs import World, Entity, Component, System           # noqa: E402
-from alloy.core.game_loop import FixedTimestepLoop                    # noqa: E402
-from alloy.core.event_bus import EventBus                             # noqa: E402
-from alloy.core.data_library import DataLibrary                       # noqa: E402
-from alloy.core.serializable import Serializable                      # noqa: E402
-from alloy.core import deps                                           # noqa: E402
-from alloy.systems.save_load import SaveLoadManager                   # noqa: E402
-from alloy.systems.inventory import Inventory                         # noqa: E402
-from alloy.ai.decision.behavior_tree import (                         # noqa: E402
+from allin_engine.core.ecs import World, Entity, Component, System           # noqa: E402
+from allin_engine.core.game_loop import FixedTimestepLoop                    # noqa: E402
+from allin_engine.core.event_bus import EventBus                             # noqa: E402
+from allin_engine.core.data_library import DataLibrary                       # noqa: E402
+from allin_engine.core.serializable import Serializable                      # noqa: E402
+from allin_engine.core import deps                                           # noqa: E402
+from allin_engine.systems.save_load import SaveLoadManager                   # noqa: E402
+from allin_engine.systems.inventory import Inventory                         # noqa: E402
+from allin_engine.ai.decision.behavior_tree import (                         # noqa: E402
     Status, Blackboard, Selector, Sequence, Condition, Action, BehaviorTree)
-from alloy.ai.decision.brain import (                                 # noqa: E402
+from allin_engine.ai.decision.brain import (                                 # noqa: E402
     BlackboardComponent, BrainComponent, BrainSystem)
-from alloy.ai.decision.difference_engine import ReactiveTracker       # noqa: E402
-from alloy.fx.particle import (                                       # noqa: E402
+from allin_engine.ai.decision.difference_engine import ReactiveTracker       # noqa: E402
+from allin_engine.fx.particle import (                                       # noqa: E402
     Particle, ForceField, Emitter, ParticleSystem)
-from alloy.utils.json_loader import JSONLoader                        # noqa: E402
-from alloy.utils.logger import get_logger                             # noqa: E402
+from allin_engine.utils.json_loader import JSONLoader                        # noqa: E402
+from allin_engine.utils.logger import get_logger                             # noqa: E402
 
 def gui_symbols():
     """延迟导入 GUI 相关符号（E9：Styles 必须在 tk.Tk() 之后才能实例化）。"""
-    from alloy.render.gui_base import Styles, StatusPanel, TkUtil
-    from alloy.render.color_system import hsv_to_rgb
+    from allin_engine.render.gui_base import Styles, StatusPanel, TkUtil
+    from allin_engine.render.color_system import hsv_to_rgb
     return Styles, StatusPanel, TkUtil, hsv_to_rgb
 ```
 
@@ -520,7 +520,7 @@ classDiagram
 
     %% ============ L2 领域：ECS ============
     class World {
-        <<alloy 只读>>
+        <<allin_engine 只读>>
         +create_entity() Entity
         +add_system(s)
         +each(*types) iter
@@ -1393,7 +1393,7 @@ sequenceDiagram
     participant BS as engine_bootstrap
     participant G as FishTankGame
     participant SG as SaveGateway
-    participant SM as SaveLoadManager<br/>(alloy)
+    participant SM as SaveLoadManager<br/>(allin_engine)
     participant OFF as offline.settle_offline<br/>(纯函数)
     participant W as World (ECS)
     participant APP as FishTankApp
@@ -1402,7 +1402,7 @@ sequenceDiagram
 
     U->>M: python main.py
     M->>BS: import (模块级自动 bootstrap)
-    Note over BS: ① os.environ["ALLIN_USER_DATA"]=%APPDATA%\LazyFishTank<br/>② sys.path.insert(G:\tools)<br/>③ 才 import alloy.*
+    Note over BS: ① os.environ["ALLIN_USER_DATA"]=%APPDATA%\LazyFishTank<br/>② sys.path.insert(G:\tools)<br/>③ 才 import allin_engine.*
     BS-->>M: 引擎符号就绪
 
     M->>G: FishTankGame(data_dir)
@@ -1586,7 +1586,7 @@ sequenceDiagram
 1. **🔴 禁止 `from __future__ import annotations`** —— 任何含 dataclass 的文件都不许写。会导致引擎 `Serializable` 嵌套反序列化**静默返回 dict**（E6，Python 3.14 实测）。`tests/test_state_roundtrip.py` 有专门的回归断言。
 2. **`import fishtank.engine_bootstrap` 必须最先执行** —— 早于任何其他项目模块，因为 `ALLIN_USER_DATA` 在引擎导入期求值（E3）。
 3. **`fishtank/` 包内严禁 `import tkinter`** —— 保证可无头单测 + 可对照移植到 C++。CI 用 grep 检查。
-4. **`alloy` 只读** —— 只 import、只继承，绝不修改一个字节。`tests/test_engine_untouched.py` 对整目录做哈希比对（基线由 `tools/engine_hash.py` 生成）。
+4. **`allin_engine` 只读** —— 只 import、只继承，绝不修改一个字节。`tests/test_engine_untouched.py` 对整目录做哈希比对（基线由 `tools/engine_hash.py` 生成）。
 5. **金币 = 整数厘**（`coins_milli`，×1000）。UI 显示才除。**任何地方不得用 float 存金币。**
 6. **取整统一 `floor(x + 0.5)`** —— Python 禁用 `round()`（银行家舍入），C++ 禁用 `std::round()`。
 7. **时间统一 UTC 整数秒**。存档内 `saved_at_utc` 是离线结算的**唯一**时间基准（引擎信封的 timestamp 拿不到，E4）。
@@ -1652,7 +1652,7 @@ sequenceDiagram
 | --- | --- | --- | --- | --- |
 | Python | **3.14.4**（PRD 要求 ≥3.10） | 必需 | 运行时 | ✅ |
 | `tkinter` | 标准库（Tk 8.6.15） | 必需 | 全部 GUI | ✅ |
-| `alloy` | 1.0.0，`G:\tools\alloy` | 必需（**本地路径，非 pip**） | ECS / 行为树 / 粒子 / 存档 / 差分引擎 / 事件总线 / 数据库 | ✅ 导入通过 |
+| `allin_engine` | 1.0.0，`G:\tools\allin_engine` | 必需（**本地路径，非 pip**） | ECS / 行为树 / 粒子 / 存档 / 差分引擎 / 事件总线 / 数据库 | ✅ 导入通过 |
 | `pystray` | ≥0.19 | **可选** | 系统托盘（P0-15） | ❌ **未安装 → 走 NullTray 降级** |
 | `Pillow` | ≥10 | **可选** | 托盘图标位图 | ✅ 已装 |
 | `numpy` | ≥1.24 | **可选** | 粒子向量化（`fx/particle_np.py`）、音频合成 | ✅ 已装 |
@@ -1700,7 +1700,7 @@ pytest>=7     ; extra == "dev"
 | 7. 空闲 CPU<2%、内存<120MB、隐藏时渲染挂起 | §7.3 差分渲染 + 隐藏降至 2 FPS + 粒子上限 | 手动 profiling |
 | 8. 全程无通知/红点/强制弹窗/音效 | 约定 14；`sound` 默认 false；仅离线卡片一次主动弹出 | `test_ui_text_l6.py` 词表扫描 |
 | 9. 玩法逻辑零硬编码数值 | `data/balance.json` 唯一源 | `test_no_hardcoded_numbers.py`（AST 扫描） |
-| 10. `alloy` 未被修改 | 只 import 不改；`engine_bootstrap` 单点接入 | `test_engine_untouched.py`（目录哈希） |
+| 10. `allin_engine` 未被修改 | 只 import 不改；`engine_bootstrap` 单点接入 | `test_engine_untouched.py`（目录哈希） |
 
 ---
 

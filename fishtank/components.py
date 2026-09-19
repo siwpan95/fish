@@ -5,7 +5,7 @@
    一切需要持久化的玩法数据都在 :class:`fishtank.state.GameState` 里，
    组件通过 `uid` 反查。这样"存档 = 唯一真相"，ECS 只是它的一层投影。
 
-引擎约定（`alloy.core.ecs`）：组件继承 `Component`（ABC），
+引擎约定（`allin_engine.core.ecs`）：组件继承 `Component`（ABC），
 推荐用 `@dataclass` 声明。
 """
 
