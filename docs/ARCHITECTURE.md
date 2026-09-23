@@ -3,7 +3,7 @@
 | 项 | 内容 |
 | --- | --- |
 | 项目名 | `lazy_fish_tank` |
-| 产出目录 | `G:\fish` |
+| 产出目录 | `<仓库根>` |
 | 撰写人 | 高见远（架构师） |
 | 版本 | v1.0 |
 | 日期 | 2026-08-03 |
@@ -20,7 +20,7 @@
 
 我在设计之前**实读**了两个资产的源码/头文件，并在本机做了可执行验证。以下结论直接推翻了 PRD 中若干映射假设，是本架构与 PRD 差异的根因。
 
-### 0.1 allin_engine（`G:\tools\allin_engine`）实读结论
+### 0.1 allin_engine（仓内 `tools/allin_engine`）实读结论
 
 | # | 结论 | 证据 | 对架构的影响 |
 | --- | --- | --- | --- |
@@ -53,7 +53,7 @@ pystray=False   ← 未安装
 
 **tkinter 桌宠能力实测**（Tk 8.6.15，全部通过）：`overrideredirect(True)`、`-transparentcolor`、`-topmost`、`-alpha`、`-toolwindow`、`-disabled`（鼠标穿透）均可用。
 
-### 0.2 XJ380 SDK（`G:\soft`）实读结论
+### 0.2 XJ380 SDK（`<PATH>`＝XJ380 SDK 根，需自行获取）实读结论
 
 | # | 结论 | 证据 |
 | --- | --- | --- |
@@ -66,9 +66,9 @@ pystray=False   ← 未安装
 | X7 | `algorithm/json.h` 只是 5 行转发壳（`#include "../../../../include/xapi_json.h"`），相对路径 4 层上跳，**易碎** | 不依赖它。XJ 端自带**极简 JSON 解析器**（只需支持我们自己的 schema 子集），见 §8.4 |
 | X8 | `depend/include/stdio.h` **无 `fopen`/`fread`** | XJ 端文件读写须走 XAPI 文件接口，不能用标准 C IO |
 | X9 | `BridgeEngine.h` 是空桩（`// pass`），`x4api.h` 引它 | **禁用 `x4api.h`，统一 `#include "x3api.h"` + `"xguiapi.h"`** |
-| X10 | 8 个编译器变体真实存在 | `G:\soft\XJ380_XACT_2026v4_windows\bin\`：`xxcc.exe`、`xxcc--.exe`、`xxcc-elf.exe`、`xxcc-elf--.exe`、`xxccte.exe`、`xxccte--.exe`、`xxccte-elf.exe`、`xxccte-elf--.exe` |
+| X10 | 8 个编译器变体真实存在 | `<PATH>\XJ380_XACT_2026v4_windows\bin\`：`xxcc.exe`、`xxcc--.exe`、`xxcc-elf.exe`、`xxcc-elf--.exe`、`xxccte.exe`、`xxccte--.exe`、`xxccte-elf.exe`、`xxccte-elf--.exe` |
 | X11 | 🔴 **本机 `clang` 与 `ld` 均未安装** | `clang --version` / `ld --version` → `command not found`。**XJ380 端当前无法真编译** |
-| X12 | 无 XJ380OS 镜像 | `G:\soft` 内无 `.img/.qcow2`。**QEMU 验证路径当前不可用** |
+| X12 | 无 XJ380OS 镜像 | `<PATH>` 内无 `.img/.qcow2`。**QEMU 验证路径当前不可用** |
 
 ### 0.3 `xj380_builder.py` 复用判断（§5.1.4 的回答）
 
@@ -80,20 +80,20 @@ pystray=False   ← 未安装
 | --- | --- | --- |
 | `select_binary(mode, fmt, lang, ext)` | `"gui"/"tui"` × `"epf"/"elf"` × `"cpp"/"c"` → `xxcc.exe` 等 | 我们固定 `("gui","epf","cpp",".exe")` → `xxcc.exe` |
 | `build_command(bin, sources, out, optimize, debug, extra)` | → `[bin, -O, -g, *sources, *extra, -o, out]` | 直接用 |
-| `detect_sdk(explicit="")` | 自动在 `G:/soft` 找 `XJ380_XACT*windows` 且含 `bin/xxcc*` | 直接用 |
+| `detect_sdk(explicit="")` | 自动在 `<PATH>` 找 `XJ380_XACT*windows` 且含 `bin/xxcc*` | 直接用 |
 | `check_toolchain()` | 探测 `clang` / `ld` | 直接用（当前会返回两个"未找到"） |
 | `ensure_toolchain(log)` | winget 或下载便携版 LLVM 18.1.8 + MinGW-w64 | 可选调用，需联网 + 数百 MB |
 | `_decode(raw)` | UTF-8 → GBK 回退 | 直接用（中文 Windows 必需） |
 
 **必须包一层的理由**：
 
-1. **铁律不改源码**——`G:\soft\xj380_builder.py` 属于资产 B，只读。
+1. **铁律不改源码**——`<PATH>\xj380_builder.py` 属于资产 B，只读。
 2. **模块顶层 `import tkinter as tk`**——直接 `import xj380_builder` 会把 GUI 依赖拖进我们的 CI/构建脚本。
-3. **`G:\soft` 是本机绝对路径，不可移植**——包装层必须在找不到时**回退到项目内自带的等价实现**（三个函数不到 30 行，复制成本远低于硬依赖成本）。
+3. **XJ380 SDK 根（`<PATH>`）是本机绝对路径，不可移植**——包装层必须在找不到时**回退到项目内自带的等价实现**（三个函数不到 30 行，复制成本远低于硬依赖成本）。
 4. **`_compile_bg()` 与 GUI 强耦合**（`self._log` / `self.after` / `self.var_*`），无法复用，编译执行逻辑必须自写。
 5. **`subprocess.run(..., shell=True)` + 路径含空格**有隐患，包装层需自行规范化路径并改用 `shell=False`。
 
-**包装设计**：`xj380/tools/xj_build.py`，用 `importlib.util.spec_from_file_location` 从 `G:\soft\xj380_builder.py` **动态加载**（不污染 `sys.path`），取上述纯函数；加载失败则用内置 fallback。对外只暴露 `build(config) -> BuildResult`。
+**包装设计**：`xj380/tools/xj_build.py`，用 `importlib.util.spec_from_file_location` 从 `<PATH>\xj380_builder.py` **动态加载**（不污染 `sys.path`），取上述纯函数；加载失败则用内置 fallback。对外只暴露 `build(config) -> BuildResult`。
 
 **🔴 必须上报的风险**：因 X11 + X12，**XJ380 端的验收标准必须降级**——第一阶段只能做到"源码完成 + 构建脚本就绪 + 与 PY 端算法通过黄金用例一致性测试"，**做不到"编译通过"和"QEMU 跑起来"**。要真编译，需先执行 `ensure_toolchain()` 装 clang/ld（联网、约 1.5 GB）；要真运行，还需从官网获取 XJ380OS 镜像。这两件事都不在工程师可控范围内，请主理人决策。
 
@@ -134,7 +134,7 @@ pystray=False   ← 未安装
 │  L1 内核层    fishtank/economy.py + offline.py  ★纯函数★        │
 │               ←→ 与 xj380/src/core/economy.cpp 一一对应          │
 ├──────────────────────────────────────────────────────────────┤
-│  L0 资产层    allin_engine（只读引用）   G:\soft SDK（只读引用）  │
+│  L0 资产层    allin_engine（只读引用）   <PATH> SDK（只读引用）   │
 └──────────────────────────────────────────────────────────────┘
                     data/*.json  ← 双端共享的唯一数值源
 ```
@@ -164,7 +164,7 @@ pystray=False   ← 未安装
 > 图例：★ = 核心/高风险文件；◆ = 双端算法对偶文件（必须逐行对齐）
 
 ```
-G:\fish\
+<仓库根>\
 ├── main.py                                 ★ PY 端入口（必须先 bootstrap 再 import 引擎）
 ├── requirements.txt                          可选依赖声明（全部 optional）
 ├── pytest.ini                                测试配置
@@ -250,7 +250,7 @@ G:\fish\
 │   │       └── xj_fs.cpp / .h                存档读写（走 XAPI，不用 stdio）
 │   ├── include_shim/                         若干最小 shim（freestanding 缺失符号）
 │   ├── tools/
-│   │   └── xj_build.py                     ★ 包装 G:\soft\xj380_builder.py（§0.3）
+│   │   └── xj_build.py                     ★ 包装 <PATH>\xj380_builder.py（§0.3）
 │   └── README.md                             XJ 端构建说明 + 工具链前置条件
 │
 ├── tests/
@@ -281,7 +281,7 @@ G:\fish\
 **这是整个项目最先要写、也最容易写错的文件。** 三条硬约束：
 
 1. `ALLIN_USER_DATA` **必须在 `import allin_engine` 之前**设置（E3：导入期求值）。
-2. `allin_engine` 不是 pip 包，在 `G:\tools\allin_engine`，需把**其父目录** `G:\tools` 加入 `sys.path`。
+2. `allin_engine` 不是 pip 包，在 `<仓库根>\tools\allin_engine`，需把**其父目录** `<仓库根>\tools` 加入 `sys.path`。
 3. 全项目**只有这一个文件** `import allin_engine.*`，其余模块一律 `from fishtank.engine_bootstrap import World, System, ...`。
 
 ```python
@@ -293,7 +293,7 @@ from pathlib import Path
 APP_NAME = "LazyFishTank"
 _ENGINE_CANDIDATES = [
     os.environ.get("ALLIN_ENGINE_HOME"),        # ① 显式覆盖
-    r"G:\tools\allin_engine",                   # ② 本机默认
+    r"<仓库根>\tools\allin_engine",              # ② 项目内置（零外部依赖）
     str(Path(__file__).resolve().parents[2] / "tools" / "allin_engine"),  # ③ 相邻部署
 ]
 
@@ -1150,7 +1150,7 @@ def make_tray(app):
 `xj380/src/platform/xj_msg.h` —— 固化常量并附来源：
 
 ```cpp
-// 来源：G:\soft\XJ380_CPP_API_Depend_1_3\include\libsys.h 第 266-274 行（实读核实）
+// 来源：<PATH>\XJ380_CPP_API_Depend_1_3\include\libsys.h 第 266-274 行（实读核实）
 // 之所以复制而非直接 include：libsys.h 相对路径易碎，且需在此附加语义注释。
 #define FT_MSG_CHAR     0   // 字符输入，hData = 字符码
 #define FT_MSG_MOVE     1   // 鼠标移动，hData = x, lData = y
@@ -1197,7 +1197,7 @@ def make_tray(app):
 
 ```python
 def build(cfg) -> BuildResult:
-    api = _load_builder_api()          # 动态加载 G:\soft\xj380_builder.py，失败则用内置 fallback
+    api = _load_builder_api()          # 动态加载 <PATH>\xj380_builder.py，失败则用内置 fallback
     sdk = api.detect_sdk(cfg.sdk_root)
     if not sdk["ok"]: return BuildResult(False, "未找到 XACT 工具链")
     miss = [n for n, _, s in api.check_toolchain() if s != "OK"]
@@ -1402,7 +1402,7 @@ sequenceDiagram
 
     U->>M: python main.py
     M->>BS: import (模块级自动 bootstrap)
-    Note over BS: ① os.environ["ALLIN_USER_DATA"]=%APPDATA%\LazyFishTank<br/>② sys.path.insert(G:\tools)<br/>③ 才 import allin_engine.*
+    Note over BS: ① os.environ["ALLIN_USER_DATA"]=%APPDATA%\LazyFishTank<br/>② sys.path.insert(项目根\tools)<br/>③ 才 import allin_engine.*
     BS-->>M: 引擎符号就绪
 
     M->>G: FishTankGame(data_dir)
@@ -1652,7 +1652,7 @@ sequenceDiagram
 | --- | --- | --- | --- | --- |
 | Python | **3.14.4**（PRD 要求 ≥3.10） | 必需 | 运行时 | ✅ |
 | `tkinter` | 标准库（Tk 8.6.15） | 必需 | 全部 GUI | ✅ |
-| `allin_engine` | 1.0.0，`G:\tools\allin_engine` | 必需（**本地路径，非 pip**） | ECS / 行为树 / 粒子 / 存档 / 差分引擎 / 事件总线 / 数据库 | ✅ 导入通过 |
+| `allin_engine` | 1.0.0，仓内 `tools/allin_engine` | 必需（**本地路径，非 pip**） | ECS / 行为树 / 粒子 / 存档 / 差分引擎 / 事件总线 / 数据库 | ✅ 导入通过 |
 | `pystray` | ≥0.19 | **可选** | 系统托盘（P0-15） | ❌ **未安装 → 走 NullTray 降级** |
 | `Pillow` | ≥10 | **可选** | 托盘图标位图 | ✅ 已装 |
 | `numpy` | ≥1.24 | **可选** | 粒子向量化（`fx/particle_np.py`）、音频合成 | ✅ 已装 |
@@ -1676,14 +1676,14 @@ pytest>=7     ; extra == "dev"
 
 | 依赖 | 来源 | 状态 |
 | --- | --- | --- |
-| XACT 2026v4 工具链（`xxcc.exe` 等 8 变体） | `G:\soft\XJ380_XACT_2026v4_windows\bin\` | ✅ 存在 |
-| C++ API 头文件 + 预编译对象 | `G:\soft\XJ380_CPP_API_Depend_1_3\` | ✅ 存在 |
+| XACT 2026v4 工具链（`xxcc.exe` 等 8 变体） | `<PATH>\XJ380_XACT_2026v4_windows\bin\` | ✅ 存在 |
+| C++ API 头文件 + 预编译对象 | `<PATH>\XJ380_CPP_API_Depend_1_3\` | ✅ 存在 |
 | **clang ≥ 18.1.8** | 需安装 | 🔴 **未安装** |
 | **GNU ld ≥ 2.42** | 需安装 | 🔴 **未安装** |
 | XJ380OS 镜像 + QEMU | 需从官网获取 | 🔴 **无** |
-| `xj380_builder.py` 纯逻辑函数 | `G:\soft\xj380_builder.py` | ✅ 动态加载复用（§0.3） |
+| `xj380_builder.py` 纯逻辑函数 | `<PATH>\xj380_builder.py` | ✅ 动态加载复用（§0.3） |
 
-> **Q9 合规**：仓库内不得包含 `G:\soft` 的任何文件（SDK 无 LICENSE，EULA 专有）。构建脚本以本地路径引用，`README.md` 注明需自行获取。
+> **Q9 合规**：仓库内不得包含 XJ380 SDK（`<PATH>`）的任何文件（SDK 无 LICENSE，EULA 专有）。构建脚本以本地路径引用，`README.md` 注明需自行获取。
 
 ---
 

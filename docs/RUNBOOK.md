@@ -2,6 +2,7 @@
 
 > **定位**：本文档面向运维人员与日常使用者，覆盖启动/关闭、存档管理、故障排查与数据维护。
 > **前置阅读**：`README.md`（运行说明）、`docs/ARCHITECTURE.md`（系统架构）。
+> **路径占位符**：`<仓库根>`（本项目根目录）、`<数据目录>`、`<备份目录>`、`<PATH>`（XJ380 SDK 根）请替换为你本机实际路径。
 
 ---
 
@@ -10,7 +11,7 @@
 ### 1.1 启动
 
 ```powershell
-cd G:\fish
+cd <仓库根>
 python main.py
 ```
 
@@ -23,7 +24,7 @@ python main.py
 | `--no-tray` | 强制禁用托盘，走窗口右键菜单降级 | `python main.py --no-tray` |
 | `--safe` | 安全自检：引擎就绪 + 数据加载 + 校验后退出（不建窗口） | `python main.py --safe` |
 | `--headless SEC` | 无头模拟指定秒数后退出（用于验证，不建窗口） | `python main.py --headless 60` |
-| `--data-dir DIR` | 自定义数据目录（存档写到 `DIR/saves/`） | `python main.py --data-dir D:\fish_data` |
+| `--data-dir DIR` | 自定义数据目录（存档写到 `DIR/saves/`） | `python main.py --data-dir <数据目录>` |
 | `--no-save` | 本次运行不写存档（自检/测试用，不污染玩家进度） | `python main.py --no-save` |
 
 ### 1.2 关闭
@@ -119,13 +120,13 @@ C:\Users\13122\AppData\Roaming\LazyFishTank\saves\autosave.json
 
 ```powershell
 # 复制到备份位置
-xcopy "%APPDATA%\LazyFishTank\saves" "D:\backup\fish_saves_%date:~0,4%%date:~5,2%%date:~8,2%\" /E /I
+xcopy "%APPDATA%\LazyFishTank\saves" "<备份目录>\fish_saves_%date:~0,4%%date:~5,2%%date:~8,2%\" /E /I
 ```
 
 **仅备份主存档：**
 
 ```powershell
-copy "%APPDATA%\LazyFishTank\saves\autosave.json" "D:\backup\autosave_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
+copy "%APPDATA%\LazyFishTank\saves\autosave.json" "<备份目录>\autosave_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
 ```
 
 **恢复备份（见 §3.2）。**
@@ -135,11 +136,11 @@ copy "%APPDATA%\LazyFishTank\saves\autosave.json" "D:\backup\autosave_$(Get-Date
 如果希望存档保存在程序目录或任何自定义位置（如 U 盘），使用 `--data-dir` 参数：
 
 ```powershell
-# 存档写到 D:\fish_data\saves\
-python main.py --data-dir D:\fish_data
+# 存档写到 <数据目录>\saves\
+python main.py --data-dir <数据目录>
 
 # 存档写到程序目录旁的 saves 文件夹
-python main.py --data-dir G:\fish\userdata
+python main.py --data-dir .\userdata
 ```
 
 ---
@@ -191,7 +192,7 @@ copy autosave.json.bak _recovery_%date:~0,4%%date:~5,2%%date:~8,2%\autosave.bak
 copy autosave.json.bak autosave.json
 
 # 5. 重新启动程序验证
-cd G:\fish
+cd <仓库根>
 python main.py
 ```
 
@@ -214,8 +215,8 @@ RuntimeError: 未找到 allin_engine，请设置环境变量 ALLIN_ENGINE_HOME
 | 优先级 | 位置 | 如何检查 |
 |--------|------|----------|
 | 1 | 环境变量 `ALLIN_ENGINE_HOME` | `echo %ALLIN_ENGINE_HOME%` |
-| 2 | 本机默认 `G:\tools\allin_engine` | `dir G:\tools\allin_engine\core\ecs.py` |
-| 3 | 相邻部署 `<项目父目录>\tools\allin_engine` | `dir G:\tools\allin_engine\core\ecs.py` |
+| 2 | 项目内置 `<仓库根>\tools\allin_engine` | `dir <仓库根>\tools\allin_engine\core\ecs.py` |
+| 3 | PyInstaller 冻结环境 `<_MEIPASS>\tools\allin_engine` | 打包产物内自动包含，无需手工检查 |
 
 判定标准是目录下存在 `core/ecs.py`。
 
@@ -223,7 +224,7 @@ RuntimeError: 未找到 allin_engine，请设置环境变量 ALLIN_ENGINE_HOME
 
 ```powershell
 # 如果引擎在其他位置，设置环境变量指向它
-setx ALLIN_ENGINE_HOME "D:\your\path\to\allin_engine"
+setx ALLIN_ENGINE_HOME "<allin_engine 目录>"
 
 # 验证设置生效（需要重新打开命令行窗口）
 echo %ALLIN_ENGINE_HOME%
@@ -296,7 +297,7 @@ python main.py --safe
 
 ```
 [1/4] 引擎就绪
-      engine_home = G:\tools\allin_engine
+      engine_home = <仓库根>\tools\allin_engine
       user_data   = C:\Users\13122\AppData\Roaming\LazyFishTank
       save_dir    = C:\Users\13122\AppData\Roaming\LazyFishTank\saves
       deps        = {'numpy': True, 'scipy': True, 'asteval': True, 'PIL': True, 'pystray': False, 'tkinter': True}
@@ -324,7 +325,7 @@ python main.py --safe
 ### 4.2 运行全量测试
 
 ```powershell
-cd G:\fish
+cd <仓库根>
 
 # 全量测试
 python -m pytest
@@ -344,7 +345,7 @@ python -m pytest tests/test_data_integrity.py -v
 黄金用例是双端（Python + C++ XJ380）一致性的唯一保障，**任何算法改动后必须验证**：
 
 ```powershell
-cd G:\fish
+cd <仓库根>
 
 # Python 端验证
 python -m pytest tests/test_offline_golden.py -v
@@ -381,16 +382,16 @@ python tools/engine_hash.py --check
 **方式一：`--data-dir` 命令行参数（推荐，每次启动指定）**
 
 ```powershell
-python main.py --data-dir D:\my_fish_data
+python main.py --data-dir <数据目录>
 ```
 
-存档将写入 `D:\my_fish_data\saves\autosave.json`。
+存档将写入 `<数据目录>\saves\autosave.json`。
 
 **方式二：环境变量持久化设置**
 
 ```powershell
 # 设置为自定义目录
-setx ALLIN_USER_DATA "D:\my_fish_data"
+setx ALLIN_USER_DATA "<数据目录>"
 
 # 验证
 echo %ALLIN_USER_DATA%
@@ -402,10 +403,10 @@ echo %ALLIN_USER_DATA%
 
 ### 5.2 自定义引擎位置
 
-如果 `allin_engine` 不在默认的 `G:\tools\allin_engine`：
+如果 `allin_engine` 不在项目内置的 `<仓库根>\tools\allin_engine`：
 
 ```powershell
-setx ALLIN_ENGINE_HOME "D:\path\to\allin_engine"
+setx ALLIN_ENGINE_HOME "<allin_engine 目录>"
 ```
 
 ### 5.3 便携部署
@@ -443,7 +444,7 @@ python main.py --no-tray
 | 正常启动 | `python main.py` |
 | 安全自检 | `python main.py --safe` |
 | 无头模拟 60 秒 | `python main.py --headless 60` |
-| 自定义存档目录 | `python main.py --data-dir D:\path` |
+| 自定义存档目录 | `python main.py --data-dir <数据目录>` |
 | 强制无托盘 | `python main.py --no-tray` |
 | 恢复隐藏窗口 | `Ctrl+Alt+F` |
 | 打开存档目录 | `explorer %APPDATA%\LazyFishTank\saves` |

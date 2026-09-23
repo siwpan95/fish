@@ -4,8 +4,8 @@
 | --- | --- |
 | 文档语言 | 简体中文 |
 | 项目名称 | `lazy_fish_tank` |
-| 编程语言 | **P0 端**：Python 3.10+（复用 `G:\tools\allin_engine`，GUI 用 tkinter，零硬依赖）<br>**P1 端**：C++11（XJ380OS XACT 2026v4，`xguiapi.h`，产物 ELF/EPF） |
-| 产出目录 | `G:\fish` |
+| 编程语言 | **P0 端**：Python 3.10+（复用仓内 `tools/allin_engine`，GUI 用 tkinter，零硬依赖）<br>**P1 端**：C++11（XJ380OS XACT 2026v4，`xguiapi.h`，产物 ELF/EPF） |
+| 产出目录 | `<仓库根>` |
 | 撰写人 | 许清楚（产品经理） |
 | 版本 | v1.0 |
 | 日期 | 2026-08-03 |
@@ -17,7 +17,7 @@
 拆解为三条可执行约束：
 
 1. **品类**：懒人 + 桌面 + 养鱼模拟器 —— 桌宠形态的放置类养成游戏，而非需要天天肝的重度经营。
-2. **资产复用**：必须真正复用 `allin_engine`（Python 游戏内核）与 `G:\soft`（XJ380OS C++ SDK），双端交付。
+2. **资产复用**：必须真正复用 `allin_engine`（Python 游戏内核）与 XJ380OS C++ SDK（`<PATH>`＝SDK 根，需自行获取），双端交付。
 3. **调研先行**：品类机制、桌宠交互范式、目标平台可行性均需有据可查。
 
 ---
@@ -45,7 +45,7 @@
 | S15 | **OpenXJ380 官方开源仓库**（2026-08 首次公开） | https://github.com/xingji-studio/OpenXJ380 | GUI 可行性边界、文档缺口的补救途径 |
 | S16 | XINGJI Studios GitHub 组织 | http://github.org/xingji-studio | BridgeEngine / StardustUI 状态 |
 
-> 本地一手资料（非网络）：`G:\soft\XJ380_XACT_2026v4_windows\depend\include\xguiapi.h`（v1.2.0，304 行，已逐行核对）、`G:\soft\XJ380_SDK_项目评估报告.md`、`G:\tools\allin_engine` 源码。
+> 本地一手资料（非网络）：`<PATH>\XJ380_XACT_2026v4_windows\depend\include\xguiapi.h`（v1.2.0，304 行，已逐行核对）、`<PATH>\XJ380_SDK_项目评估报告.md`、仓内 `tools/allin_engine` 源码。
 
 ### 1.2 关键发现
 
@@ -260,7 +260,7 @@ quadrantChart
 
 | ID | 端 | 需求 | 实现要点 / 引擎映射 |
 | --- | --- | --- | --- |
-| P1-01 | **XJ** | **XJ380OS 移植端**：`xxcc` 编译出 ELF/EPF，QEMU 中可运行，玩法与数值同源 | 复用 `G:\soft\xj380_builder.py` 作为构建前端；编译参数 `-ffreestanding -fno-builtin -fno-exceptions -nostdinc` |
+| P1-01 | **XJ** | **XJ380OS 移植端**：`xxcc` 编译出 ELF/EPF，QEMU 中可运行，玩法与数值同源 | 复用 `<PATH>\xj380_builder.py` 作为构建前端；编译参数 `-ffreestanding -fno-builtin -fno-exceptions -nostdinc` |
 | P1-02 | **XJ** | **软渲染层**：自实现画圆/椭圆（`xapi_DrawCircle` 已被注释不可用）、Alpha 混合、精灵绘制，输出到离屏 `XCOLORA` 缓冲 | 中点画圆算法自写；整帧 `xapi_WriteBufferA` 提交；用 `xapi_RefreshPartWindow` 做脏矩形优化 |
 | P1-03 | **XJ** | **输入与消息**：接管 `SetMsgPrcor` 回调，识别鼠标点击与键盘事件 | ⚠️ **消息 `Type` 常量未在头文件定义**，需先从 OpenXJ380 `user/xapi/` 源码反查或 QEMU 实测枚举，再固化为项目内 `xj_msg.h` |
 | P1-04 | **XJ** | **资源加载**：鱼与装饰的图片资源在**启动时一次性**载入内存缓冲，杜绝每帧读盘 | 启动期 `xapi_GetPicSize` + `xapi_DrawPicture` 到离屏窗口再 `xapi_ReadBufferA` 回读，缓存为内存图集 |
@@ -531,7 +531,7 @@ quadrantChart
 
 ## 8. 引擎能力映射总表（"结合两个项目"的落地清单）
 
-> 以下映射均已对照 `G:\tools\allin_engine` 实际源码核实（类名与方法名为实际存在的符号）。
+> 以下映射均已对照仓内 `tools/allin_engine` 实际源码核实（类名与方法名为实际存在的符号）。
 
 | 玩法能力 | 映射到 allin_engine | 已核实的可用符号 |
 | --- | --- | --- |
@@ -556,7 +556,7 @@ quadrantChart
 | 可选依赖优雅降级 | `core/deps.py` | 与引擎"零硬依赖"原则一致 |
 | 日志 | `utils/logger.py` | |
 
-| XJ380 端能力 | 映射到 `G:\soft` | 已核实 |
+| XJ380 端能力 | 映射到 XJ380 SDK（`<PATH>`） | 已核实 |
 | --- | --- | --- |
 | 窗口创建 / 无边框 | `xguiapi.h` `xapi_CreateWindow` + `XWIN_FRAME_OFF` | ✅ |
 | 离屏软渲染提交 | `xapi_WriteBufferA` + `xapi_RefreshPartWindow` | ✅（**主渲染路径**） |
@@ -564,7 +564,7 @@ quadrantChart
 | 按钮 / 右键菜单 | `xapi_Button` / `xapi_RegisterRightButtonMenu` | ✅ |
 | 输入事件 | `SetMsgPrcor` | ⚠️ 消息 `Type` 常量缺失，需反查 |
 | 画圆 | — | ❌ **`xapi_DrawCircle` 被注释，需自实现** |
-| 构建前端 | `G:\soft\xj380_builder.py`（26 KB，已存在） | ✅ 复用 |
+| 构建前端 | `<PATH>\xj380_builder.py`（26 KB，随 SDK 获取） | ✅ 复用 |
 | 文档缺口补救 | OpenXJ380 开源仓库 `user/xapi/` | ✅ 新增途径 |
 
 ---
@@ -581,7 +581,7 @@ quadrantChart
 | **Q6** | **XJ380 是否有音频 API**？`xguiapi.h` 中没有，需确认 `x3api.h` / `x4api.h` / `xapi.h` 是否提供。 | 影响 P1-12 在 XJ 端的可行性 | 若无，则音频标记为 Python 端独占 |
 | **Q7** | **存档位置**：Python 端存 `%APPDATA%` 还是程序目录？XJ380 端的可写路径规范是什么？ | 影响双端存档互通（US7） | 建议 Python 端默认程序目录（便携），提供配置项；XJ380 端待确认后对齐 |
 | **Q8** | **鱼种科普文案**是否需要严格考证？24 条文案需要事实准确性把关。 | 影响内容工作量与可信度 | 建议由我（产品）负责撰写并逐条核对，不占用工程工期 |
-| **Q9** | **SDK 分发法律风险**：`G:\soft` 的 XJ380 SDK 自身无 LICENSE 文件。若产物需要分发，是否只分发我方源码而不打包 SDK？ | 合规风险 | 建议**仓库内不包含 SDK 任何文件**，构建脚本从本地 `G:\soft` 路径引用；README 注明需自行获取 SDK |
+| **Q9** | **SDK 分发法律风险**：XJ380 SDK（`<PATH>`）自身无 LICENSE 文件。若产物需要分发，是否只分发我方源码而不打包 SDK？ | 合规风险 | 建议**仓库内不包含 SDK 任何文件**，构建脚本从本地 `<PATH>` 路径引用；README 注明需自行获取 SDK |
 | **Q10** | **窗口默认置顶开还是关**？置顶更像桌宠，但可能干扰全屏应用。 | 影响首次体验 | 建议**默认开启置顶，但检测到前台全屏应用时自动让位**；若实现成本高，则默认关闭置顶 |
 
 ---

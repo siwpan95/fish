@@ -21,7 +21,7 @@ sequenceDiagram
 
     U->>M: python main.py
     M->>BS: import (模块级自动 bootstrap)
-    Note over BS: ① os.environ["ALLIN_USER_DATA"]=%APPDATA%\LazyFishTank<br/>② sys.path.insert(G:\tools)<br/>③ 才 import alloy.*
+    Note over BS: ① os.environ["ALLIN_USER_DATA"]=%APPDATA%\LazyFishTank<br/>② sys.path.insert(项目根\tools)<br/>③ 才 import alloy.*
     BS-->>M: 引擎符号就绪
 
     M->>G: FishTankGame(data_dir)
