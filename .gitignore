@@ -26,7 +26,7 @@ dist/
 *.swp
 .DS_Store
 
-# 🔴 Q9 合规：仓库内不得包含 G:\soft 的 XJ380 SDK 任何文件（EULA 专有，无 LICENSE）
+# 🔴 Q9 合规：仓库内不得包含 XJ380 SDK 任何文件（EULA 专有，无 LICENSE，需自行从官方渠道获取）
 xj380/sdk/
 xj380/**/XJ380_*
 

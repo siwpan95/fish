@@ -32,14 +32,14 @@ pip install -r requirements.txt   # 可选；不装也能跑
 `allin_engine` 按以下顺序三级定位（`fishtank/engine_bootstrap.py`）：
 
 1. 环境变量 **`ALLIN_ENGINE_HOME`**（显式覆盖，优先级最高）
-2. 本机默认 **`<PATH>`**（统一游戏引擎 allin_engine 现行位置）
-3. 相邻部署 **`<项目父目录>\an-engine`**
+2. 项目内置 **`<项目根>\tools\allin_engine`**（随仓库分发的副本，零外部依赖，复制后即用）
+3. PyInstaller 冻结环境 **`sys._MEIPASS\tools\allin_engine`**（仅打包运行时存在，引擎随包捆绑）
 
-判定标准是该目录下存在 `core/ecs.py`。三处都找不到会抛出带修复指引的 `RuntimeError`。
+判定标准是该目录下存在 `core/ecs.py`。三级都找不到会抛出带修复指引的 `RuntimeError`。
 
 ```powershell
-# 引擎不在默认位置时：
-setx ALLIN_ENGINE_HOME "<PATH>"
+# 引擎不在候选位置时（应指向含 core/ecs.py 的 allin_engine 目录）：
+setx ALLIN_ENGINE_HOME "<allin_engine 目录>"
 ```
 
 > 🔴 `allin_engine` 属于只读资产：本项目只 import / 继承 / 组合，**绝不修改其中任何一个字节**。
