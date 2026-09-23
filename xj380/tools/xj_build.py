@@ -4,19 +4,58 @@
 XJ380 EPF 构建脚本。
 用法: python xj_build.py [--clean]
 
-依赖:
-  clang++ / ld.lld : C:\\Users\\13122\\.workbuddy\\binaries\\llvm\\bin\\
-  XJ380 SDK        : G:\\soft\\XJ380_XACT_2026v4_windows\\depend\\
-  Python 3.14      : C:\\Users\\13122\\AppData\\Local\\Programs\\Python\\Python314\\python.exe
+依赖（2026-09-23 去本地化，均可用环境变量覆盖）:
+  clang++ / ld.lld : 环境变量 LLVM_BIN（默认探测 PATH 与常见安装位置）
+  XJ380 SDK        : 环境变量 XJ380_SDK_DEPEND（指向 XACT 的 depend 目录）
+  Python           : 当前解释器（sys.executable）
 """
 
 import os, sys, subprocess, glob, shutil
 from pathlib import Path
 
 # ── 路径配置 ──────────────────────────────────────────────────
-PROJECT_ROOT = Path(r"G:\fish\xj380")
-LLVM_BIN    = Path(r"C:\Users\13122\.workbuddy\binaries\llvm\bin")
-SDK_DEPEND  = Path(r"G:\soft\XJ380_XACT_2026v4_windows\depend")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]        # tools/ -> xj380/（原硬编码 G:\fish\xj380）
+
+
+def _find_llvm_bin() -> Path:
+    """LLVM bin 目录：环境变量 LLVM_BIN → PATH 里的 clang++ → 常见安装位置 → fail-loud。"""
+    env = os.environ.get("LLVM_BIN")
+    if env:
+        p = Path(env)
+        if (p / "clang++.exe").is_file():
+            return p
+        raise SystemExit(f"[错误] LLVM_BIN={p} 下找不到 clang++.exe")
+    hit = shutil.which("clang++")
+    if hit:
+        return Path(hit).parent
+    for cand in (
+        Path(os.environ.get("USERPROFILE", "")) / ".workbuddy" / "binaries" / "llvm" / "bin",
+        Path("C:/Program Files/LLVM/bin"),
+    ):
+        if (cand / "clang++.exe").is_file():
+            return cand
+    raise SystemExit(
+        "[错误] 找不到 clang++。请安装 LLVM 或设置 LLVM_BIN=<llvm\\bin 目录>。\n"
+        "  例：set LLVM_BIN=D:\\LLVM\\bin"
+    )
+
+
+def _require_sdk() -> Path:
+    """XJ380 XACT SDK 的 depend 目录（专有软件，不在本仓分发）→ 环境变量 XJ380_SDK_DEPEND。"""
+    env = os.environ.get("XJ380_SDK_DEPEND")
+    if env:
+        p = Path(env)
+        if p.is_dir():
+            return p
+        raise SystemExit(f"[错误] XJ380_SDK_DEPEND={p} 不是目录")
+    raise SystemExit(
+        "[错误] 未设置 XJ380_SDK_DEPEND（XJ380 XACT 专有 SDK 不在本仓分发）。\n"
+        "  例：set XJ380_SDK_DEPEND=D:\\XJ380_XACT\\depend"
+    )
+
+
+LLVM_BIN    = _find_llvm_bin()
+SDK_DEPEND  = _require_sdk()
 SDK_INCLUDE = SDK_DEPEND / "include"
 SDK_OBJ_GUI = SDK_DEPEND / "obj-gui"
 
