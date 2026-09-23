@@ -1,5 +1,8 @@
 # 懒人桌面养鱼模拟器 · lazy_fish_tank
 
+> 仓库：<https://gitee.com/siwpan/fish> ｜ 许可：MIT（见 [LICENSE](LICENSE)）
+> 注：文中 <PATH> 为路径占位符，请替换为你本机实际的目录 / 可执行文件路径。
+
 一个**不催你上线**的桌面养鱼桌宠。鱼不会死、不会病、不会消失；收益不过期、不清零；
 离开多久回来都只是"欢迎回来"，没有一句催促。
 
@@ -29,14 +32,14 @@ pip install -r requirements.txt   # 可选；不装也能跑
 `allin_engine` 按以下顺序三级定位（`fishtank/engine_bootstrap.py`）：
 
 1. 环境变量 **`ALLIN_ENGINE_HOME`**（显式覆盖，优先级最高）
-2. 本机默认 **`G:\repos\an-engine`**（统一游戏引擎 allin_engine 现行位置）
+2. 本机默认 **`<PATH>`**（统一游戏引擎 allin_engine 现行位置）
 3. 相邻部署 **`<项目父目录>\an-engine`**
 
 判定标准是该目录下存在 `core/ecs.py`。三处都找不到会抛出带修复指引的 `RuntimeError`。
 
 ```powershell
 # 引擎不在默认位置时：
-setx ALLIN_ENGINE_HOME "D:\path\to\allin_engine"
+setx ALLIN_ENGINE_HOME "<PATH>"
 ```
 
 > 🔴 `allin_engine` 属于只读资产：本项目只 import / 继承 / 组合，**绝不修改其中任何一个字节**。
@@ -48,7 +51,7 @@ python main.py                 # 正常启动桌宠窗口
 python main.py --no-tray       # 强制无托盘模式
 python main.py --safe          # 安全自检：引擎就绪 + 数据加载 + 校验后退出
 python main.py --headless 60   # 无头模拟 60 秒，打印金币/水质/鱼坐标变化
-python main.py --data-dir D:\x # 自定义数据目录（存档写到 D:\x\saves）
+python main.py --data-dir <PATH> # 自定义数据目录（存档写到 <PATH>）
 ```
 
 ### 存档位置
@@ -95,7 +98,7 @@ XJ380 端源码位于 `xj380/`，但**本仓库不包含 XJ380 SDK 的任何文�
 
 该 SDK（XACT 工具链、`XJ380_CPP_API_Depend_1_3` 头文件与预编译对象）为专有软件，
 未随附 LICENSE，**需使用者自行从官方渠道获取**，并放置到本机路径后由构建脚本引用。
-本机默认引用位置为 `G:\docs\soft`。
+本机默认引用位置为 `<PATH>`。
 
 同样地，构建 XJ380 端还需要自行安装 `clang ≥ 18.1.8` 与 `GNU ld ≥ 2.42`；
 在 QEMU 中运行还需要 XJ380OS 镜像。这些均不在本仓库分发范围内。
@@ -105,7 +108,7 @@ XJ380 端源码位于 `xj380/`，但**本仓库不包含 XJ380 SDK 的任何文�
 1. 🔴 任何含 dataclass 的文件**禁止** `from __future__ import annotations`
    —— 会让引擎 `Serializable` 的嵌套 `from_dict` 静默返回 dict（无异常的数据损坏，Python 3.14 实测）。
 2. `fishtank/` 包内**严禁 import tkinter**。
-3. `allin_engine` 与 `G:\docs\soft` **只读**，一个字节都不许改。
+3. `allin_engine` 与 `<PATH>` **只读**，一个字节都不许改。
 4. 玩法逻辑**零硬编码数值**，全部走 `data/balance.json`。
 5. 金币一律整数厘（`coins_milli`，1 金币 = 1000 厘）；取整统一 `floor(x + 0.5)`，**禁用内置 `round()`**。
 6. 时间一律 UTC 整数秒；坐标一律归一化 `[0,1]`；遍历鱼**必须按 uid 升序**。
