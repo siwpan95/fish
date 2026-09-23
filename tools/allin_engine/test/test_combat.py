@@ -5,7 +5,7 @@ test/test_combat.py — 战斗系统单元测试
 战斗引擎 (CombatState / CombatEngine)。
 
 运行：
-    cd D:/allin && python -m allin_engine.test.test_combat
+    cd <fish仓>/tools && python -m allin_engine.test.test_combat
 """
 
 import sys

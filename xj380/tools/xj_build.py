@@ -14,7 +14,7 @@ import os, sys, subprocess, glob, shutil
 from pathlib import Path
 
 # ── 路径配置 ──────────────────────────────────────────────────
-PROJECT_ROOT = Path(__file__).resolve().parents[1]        # tools/ -> xj380/（原硬编码 G:\fish\xj380）
+PROJECT_ROOT = Path(__file__).resolve().parents[1]        # tools/ -> xj380/
 
 
 def _find_llvm_bin() -> Path:
