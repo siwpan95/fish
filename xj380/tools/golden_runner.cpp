@@ -3,6 +3,8 @@
 // 用宿主 g++ 编译：读 offline_cases.json，对每个用例跑 settle_offline，
 // 与 Python 端期望值逐字段比对。全程不依赖 XJ380 SDK，只在宿主环境运行。
 //
+// 运行（素材根不再写死）：tools/golden_runner [fish仓根]  或  设 FISH_ROOT=<fish仓根>
+//
 // 编译（在 xj380/ 目录下）：
 //   g++ -std=c++11 -fno-exceptions -fno-rtti -ffp-contract=off \
 //       -I src/core tools/golden_runner.cpp \
@@ -237,21 +239,36 @@ static int compare_case(const JsonDoc& doc, i32 case_node,
     return errors;
 }
 
+// ── 素材根解析（2026-09-23 去本地化）──────────────────────────
+// 原实现写死 "G:/fish/..."，该目录已不存在（fish 仓现为 <工作区>/repos/fish）。
+// 解析顺序：argv[1] → 环境变量 FISH_ROOT → 当前工作目录。
+static const char* fish_root(int argc, char** argv) {
+    if (argc > 1 && argv[1] != NULL && argv[1][0] != '\0') return argv[1];
+    const char* env = getenv("FISH_ROOT");
+    if (env != NULL && env[0] != '\0') return env;
+    return ".";
+}
+
 // ── main ──────────────────────────────────────────────────────
 
 int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
+    const char* root = fish_root(argc, argv);
+    char p_balance[512], p_fish[512], p_decor[512], p_cases[512];
+    snprintf(p_balance, sizeof(p_balance), "%s/data/balance.json", root);
+    snprintf(p_fish,    sizeof(p_fish),    "%s/data/fish_data.json", root);
+    snprintf(p_decor,   sizeof(p_decor),   "%s/data/decor_data.json", root);
+    snprintf(p_cases,   sizeof(p_cases),   "%s/tests/golden/offline_cases.json", root);
 
     // 1. 读取文件
     i32 len;
-    char* balance_text = read_file("G:/fish/data/balance.json", &len);
-    char* fish_text    = read_file("G:/fish/data/fish_data.json", &len);
-    char* decor_text   = read_file("G:/fish/data/decor_data.json", &len);
-    char* cases_text   = read_file("G:/fish/tests/golden/offline_cases.json", &len);
+    char* balance_text = read_file(p_balance, &len);
+    char* fish_text    = read_file(p_fish, &len);
+    char* decor_text   = read_file(p_decor, &len);
+    char* cases_text   = read_file(p_cases, &len);
 
     if (!balance_text || !fish_text || !decor_text || !cases_text) {
-        fprintf(stderr, "FATAL: cannot read data files\n");
+        fprintf(stderr, "FATAL: cannot read data files under root=%s\n", root);
+        fprintf(stderr, "       用法: golden_runner [fish仓根]   或设 FISH_ROOT=<fish仓根>\n");
         return 2;
     }
 
