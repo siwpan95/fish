@@ -29,7 +29,6 @@ def _engine_candidates():
     ① 环境变量 ALLIN_ENGINE_HOME（显式覆盖）
     ② 项目内置 <项目根>/tools/allin_engine（零外部依赖，复制后即用）
     ③ PyInstaller 冻结环境 sys._MEIPASS 下的内置引擎
-    ④ 本机默认 G:\\tools\\allin_engine（兼容旧开发环境）
     """
     here = Path(__file__).resolve()
     # parents[0]=fishtank/, parents[1]=项目根/, parents[2]=项目父目录/
@@ -41,7 +40,6 @@ def _engine_candidates():
     meipass = getattr(sys, "_MEIPASS", "")
     if meipass:
         candidates.append(str(Path(meipass) / "tools" / "allin_engine"))
-    candidates.append(r"G:\tools\allin_engine")
     return candidates
 
 
