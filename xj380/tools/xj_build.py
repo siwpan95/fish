@@ -36,7 +36,7 @@ def _find_llvm_bin() -> Path:
             return cand
     raise SystemExit(
         "[错误] 找不到 clang++。请安装 LLVM 或设置 LLVM_BIN=<llvm\\bin 目录>。\n"
-        "  例：set LLVM_BIN=D:\\LLVM\\bin"
+        "  例：set LLVM_BIN=<LLVM 安装目录>\\bin"
     )
 
 
@@ -50,7 +50,7 @@ def _require_sdk() -> Path:
         raise SystemExit(f"[错误] XJ380_SDK_DEPEND={p} 不是目录")
     raise SystemExit(
         "[错误] 未设置 XJ380_SDK_DEPEND（XJ380 XACT 专有 SDK 不在本仓分发）。\n"
-        "  例：set XJ380_SDK_DEPEND=D:\\XJ380_XACT\\depend"
+        "  例：set XJ380_SDK_DEPEND=<SDK 解包目录>\\depend"
     )
 
 

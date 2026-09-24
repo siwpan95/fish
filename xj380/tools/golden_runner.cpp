@@ -240,7 +240,7 @@ static int compare_case(const JsonDoc& doc, i32 case_node,
 }
 
 // ── 素材根解析（2026-09-23 去本地化）──────────────────────────
-// 原实现写死 "G:/fish/..."，该目录已不存在（fish 仓现为 <工作区>/repos/fish）。
+// 原实现写死 "原路径"，该目录已不存在（fish 仓现为 <工作区>/repos/fish）。
 // 解析顺序：argv[1] → 环境变量 FISH_ROOT → 当前工作目录。
 static const char* fish_root(int argc, char** argv) {
     if (argc > 1 && argv[1] != NULL && argv[1][0] != '\0') return argv[1];
