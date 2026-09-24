@@ -44,6 +44,11 @@ setx ALLIN_ENGINE_HOME "<allin_engine 目录>"
 
 > 🔴 `allin_engine` 属于只读资产：本项目只 import / 继承 / 组合，**绝不修改其中任何一个字节**。
 
+> 📌 因此 `tools/allin_engine/` 副本**自带的** `README.md`、`pyproject.toml` 里仍保留上游的历史沿革与示例措辞
+> （如「从 `D:\allin` 下多项目提炼」「`cd D:/allin && python allin_engine/…`」）——那是**上游文本，不是本仓的
+> 可执行指令**，本仓按只读纪律不去改它。**本项目实际口径以上面三级候选链与 `fishtank/engine_bootstrap.py` 现码为准**
+> （即 `ALLIN_ENGINE_HOME` → `<项目根>\tools\allin_engine` → `sys._MEIPASS\tools\allin_engine`）。
+
 ## 3. 运行
 
 ```bash
